@@ -23,7 +23,7 @@ public class FilmController {
     protected static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     @Autowired
-    FilmService filmService;
+    private FilmService filmService;
 
     @GetMapping
     public Collection<Film> getFilms() {

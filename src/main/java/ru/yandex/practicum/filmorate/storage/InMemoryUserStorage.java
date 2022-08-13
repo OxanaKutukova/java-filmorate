@@ -10,7 +10,7 @@ import java.util.HashMap;
 @Component
 public class InMemoryUserStorage  implements UserStorage {
 
-    protected HashMap<Integer, User> users = new HashMap<>();
+    private HashMap<Integer, User> users = new HashMap<>();
     private Integer generateUserId = 0;
 
     @Override

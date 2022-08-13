@@ -20,7 +20,7 @@ import java.util.Collection;
 public class UserController {
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @GetMapping
     public Collection<User> getUsers() {

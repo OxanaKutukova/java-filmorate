@@ -22,57 +22,87 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    //Получить список всех пользователей
     @GetMapping
-    public Collection<User> getUsers() {
-        log.info("Запрос всех пользователей");
-        return userService.getUsers();
+    public Collection<User> getAllUsers() {
+        log.info("getAllUsers (GET /users/): Получить список всех пользователей");
+        Collection<User> allUsers = userService.getAllUsers();
+        log.info("getAllUsers (GET /users/): Результат = {}", allUsers);
+        return allUsers;
     }
+
+    //Получить пользователя по Id
     @GetMapping("/{userId}")
     public User getUserById(@PathVariable int userId) {
-        log.info("Получение пользователя id={}", userId);
-        return userService.getUserById(userId);
+        log.info("getUserById (GET /users/{}): Получить пользователя по id(входной параметр) = {}", userId, userId);
+        User resUser = userService.getUserById(userId);
+        log.info("getUserById (GET /users/{}): Результат = {}",userId, resUser);
+        return resUser;
     }
 
-    @GetMapping("/{userId}/friends")
-    public Collection<User> getFriends(@PathVariable int userId) {
-        log.info("Запрос списка друзей у пользователя id={}", userId);
-        return userService.getFriends(userId);
-    }
-
-    @GetMapping("/{userId}/friends/common/{otherUserId}")
-    public Collection<User> getCommonFriends(@PathVariable int userId, @PathVariable int otherUserId) {
-        log.info("Получение cписка общих друзей пользователя id={} с пользователем с id = {}", userId, otherUserId);
-        return userService.getCommonFriends(userId, otherUserId);
-    }
-
+    //Добавить пользователя
     @PostMapping
     public User saveUser(@Valid @RequestBody User user) {
-        log.info("Добавление пользователя с логином {}", user.getLogin());
+        log.info("saveUser (POST /users/): Добавить пользователя (входной параметр) = {}", user);
         validate(user);
-        log.info("Произведена валидация пользователя");
-        return userService.saveUser(user);
+        log.info("saveUser (POST /users/): Произведена валидация пользователя");
+        User resUser = userService.saveUser(user);
+        log.info("saveUser (POST /users/): Пользователь добавлен: {}", resUser);
+        return resUser;
     }
 
+    //Изменить пользователя
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        log.info("Изменение пользователя id = {}", user.getId());
+        log.info("updateUser (PUT /users/): Изменить пользователя (входной параметр) = {}", user);
         validate(user);
-        log.info("Произведена валидация пользователя");
-        return userService.updateUser(user);
+        log.info("updateUser (PUT /users/): Произведена валидация пользователя");
+        User resUser = userService.updateUser(user);
+        log.info("updateUser (PUT /users/): Пользователь изменен: {}", resUser);
+        return resUser;
     }
 
+    //Добавить в друзья
     @PutMapping("/{userId}/friends/{friendId}")
     public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
-        log.info("Добавление в друзья к пользователю с id = {} пользователя с id = {}", userId, friendId);
+        log.info("addFriend (PUT /users/{}/friends/{}): Добавить в друзья к пользователю с " +
+                        "id (входной параметр) = {} пользователя с id (входной параметр) = {}",
+                        userId, friendId, userId, friendId);
         userService.addFriend(userId, friendId);
     }
 
+    //Удалить из друзей
     @DeleteMapping("/{userId}/friends/{friendId}")
     public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
-        log.info("Удаление из друзей у пользователя с id = {} друга с id = {}", userId, friendId);
+        log.info("deleteFriend (DELETE /users/{}/friends/{}): Удалить из друзей у пользователя с " +
+                        "id (входной параметр) = {} друга с id (входной параметр) = {}",
+                        userId, friendId, userId, friendId);
         userService.deleteFriend(userId, friendId);
     }
 
+    //Получить список друзей
+    @GetMapping("/{userId}/friends")
+    public Collection<User> getFriends(@PathVariable int userId) {
+        log.info("getFriends (GET /users/{}/friends): Получить список друзей пользователя " +
+                "id (входной параметр) ={}", userId);
+        Collection<User> friends = userService.getFriends(userId);
+        log.info("getFriends (GET /users/{}/friends): Результат : {}", userId, friends);
+        return friends;
+    }
+
+    //Получить список друзей, общих с другим пользователем
+    @GetMapping("/{userId}/friends/common/{otherUserId}")
+    public Collection<User> getCommonFriends(@PathVariable int userId, @PathVariable int otherUserId) {
+        log.info("getCommonFriends (GET /users/{}/friends/common/{}): Получить cписок общих друзей пользователя " +
+                "id (входной параметр) = {} с пользователем с id (входной параметр) = {}",
+                userId, otherUserId, userId, otherUserId);
+        Collection<User> commonFriends = userService.getCommonFriends(userId, otherUserId);
+        log.info("getCommonFriends (GET /users/{}/friends/common/{}): Результат : {}", userId, otherUserId, commonFriends);
+
+        return commonFriends;
+    }
+
+    //Валидация пользователя
     protected void validate(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");

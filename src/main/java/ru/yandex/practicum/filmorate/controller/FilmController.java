@@ -12,7 +12,6 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.HashMap;
 
 @RestController
 @RequestMapping("films")
@@ -25,51 +24,72 @@ public class FilmController {
     @Autowired
     private FilmService filmService;
 
+    //Получить список всех фильмов
     @GetMapping
-    public Collection<Film> getFilms() {
-        log.info("Запрос всех фильмов");
-        return filmService.getFilms();
+    public Collection<Film> getAllFilms() {
+        log.info("getAllFilms (GET /films/): Получить список всех фильмов");
+        Collection<Film> allFilms = filmService.getAllFilms();
+        log.info("getAllFilms (GET /films/): Результат = {}", allFilms);
+        return allFilms;
     }
 
+    //Получить фильм по Id
     @GetMapping("/{filmId}")
     public Film getFilmById(@PathVariable int filmId) {
-        log.info("Получение информации о фильме с id={}", filmId);
-        return filmService.getFilmById(filmId);
+        log.info("getFilmById (GET /films/{}): Получить фильм по id (входной параметр) = {}", filmId, filmId);
+        Film resFilm = filmService.getFilmById(filmId);
+        log.info("getFilmById (GET /films/{}): Результат = {}", filmId, resFilm);
+        return resFilm;
     }
+
+    //Добавить фильм
     @PostMapping
     public Film saveFilm(@Valid  @RequestBody Film film) {
-        log.info("Добавление фильма с названием {}", film.getName());
+        log.info("saveFilm (POST /films/): Добавить фильм (входной параметр) = {}", film);
         validate(film);
-        log.info("Произведена валидация фильма");
-        return filmService.saveFilm(film);
+        log.info("saveFilm (POST /films/): Произведена валидация фильма");
+        Film resFilm = filmService.saveFilm(film);
+        log.info("saveFilm (POST /films): Добавлен фильм: {}", resFilm);
+        return resFilm;
     }
 
+    //Изменить фильм
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-        log.info("Изменение фильма id = {}", film.getId());
+        log.info("updateFilm (PUT /films/): Изменить фильм (входной параметр) = {}", film);
         validate(film);
-        log.info("Произведена валидация фильма");
-        return filmService.updateFilm(film);
+        log.info("updateFilm (PUT /films): Произведена валидация фильма");
+        Film resFilm = filmService.updateFilm(film);
+        log.info("updateFilm (PUT /films/): Изменен фильм: {}", resFilm);
+        return resFilm;
     }
 
+    //Пользователь ставит лайк фильму
     @PutMapping("/{filmId}/like/{userId}")
     public void addLike(@PathVariable int filmId, @PathVariable int userId) {
-        log.info("Пользователь  id = {} ставит лайк фильму id = {}", userId, filmId);
+        log.info("addLike (PUT /films/{}/like/{}): Пользователь id = {} ставит лайк фильму id = {}",
+                userId, filmId, userId, filmId);
         filmService.addLike(filmId, userId);
     }
 
+    //Пользователь удаляет лайк у фильма
     @DeleteMapping("/{filmId}/like/{userId}")
     public void deleteLike(@PathVariable int filmId, @PathVariable int userId) {
-        log.info("Пользователь  id = {} удаляет лайк фильма id = {}", userId, filmId);
+        log.info("deleteLike (DELETE /films/{}/like/{}): Пользователь id = {} удаляет лайк фильма id = {}",
+                userId, filmId, userId, filmId);
         filmService.deleteLike(filmId, userId);
     }
+
+    //Получить список из первых count фильмов по количеству лайков
     @GetMapping("/popular")
     public Collection<Film> getMostLikedFilms(@RequestParam(defaultValue = "10", required = false) int count) {
-        log.info("Запрос списrf из первых {} фильмов по количеству лайков", count);
-        return filmService.getMostLikedFilms(count);
-
+        log.info("getMostLikedFilms (GET /films/popular/): Получить список из первых {} фильмов по количеству лайков", count);
+        Collection<Film> films = filmService.getMostLikedFilms(count);
+        log.info("getMostLikedFilms (GET /films/popular/): Результат {}", films);
+        return films;
     }
 
+    //Валидация фильма
     protected void validate(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             throw new ValidationException("Название фильма не может быть пустым");
@@ -84,7 +104,6 @@ public class FilmController {
         if (film.getDuration() < 0) {
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
-
     }
 
 }

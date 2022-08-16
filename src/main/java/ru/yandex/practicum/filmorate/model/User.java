@@ -20,14 +20,12 @@ import java.util.Set;
 
 public class User {
     private Integer id;
-    @Email
-    private String email;
+    private String name;
     @NotBlank @NotNull
     private String login;
-    private String name;
+    @Email
+    private String email;
     @Past
     private LocalDate birthday;
 
-    @JsonIgnore
-    private Set<Integer> friendIds = new HashSet<>();
 }

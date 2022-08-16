@@ -7,6 +7,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
@@ -22,8 +23,17 @@ public class Film {
     private String name;
     private String description;
     private LocalDate releaseDate;
-    private int duration;
+    private Integer duration;
+    @NotNull
+    private Mpa mpa;
+    private LinkedHashSet <Genre> genres;
 
-    @JsonIgnore
-    private Set<Integer> userIds = new HashSet<>();
+    public Film(Integer id, String name, String description, LocalDate releaseDate, Integer duration, Mpa mpa) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.mpa = mpa;
+    }
 }

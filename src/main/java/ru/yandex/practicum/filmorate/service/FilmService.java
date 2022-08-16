@@ -25,31 +25,17 @@ public class FilmService {
     @Autowired
     @Qualifier("userDbStorage")
     private UserStorage userStorage;
-    @Autowired
-    private GenreStorage genreStorage;
+
     @Autowired
     private LikeStorage likeStorage;
 
     public Collection<Film> getAllFilms() {
         Collection<Film> allFilms = filmStorage.getAllFilms();
-        for(Film film : allFilms) {
-            LinkedHashSet<Genre> genres = genreStorage.loadFilmGenres(film.getId());
-            if (genres != null && !genres.isEmpty()) {
-                film.setGenres(genres);
-            }
-        }
         return allFilms;
     }
 
     public Film getFilmById(int filmId) {
-        Film resFilm = filmStorage.getFilmById(filmId);
-        if (resFilm == null) {
-            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
-        }
-        LinkedHashSet<Genre> genres = genreStorage.loadFilmGenres(filmId);
-        if (genres != null && !genres.isEmpty()) {
-            resFilm.setGenres(genres);
-        }
+        final Film resFilm = getFilmWithCheckNull(filmId);
         return resFilm;
     }
 
@@ -57,28 +43,20 @@ public class FilmService {
         if (filmStorage.getAllFilms().contains(film)) {
             throw new ValidationException("Фильм с id = "+ film.getId()+ " уже есть в списке");
         }
-        Film sFilm = filmStorage.saveFilm(film);
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            genreStorage.saveFilmGenres(sFilm);
-        }
+        final Film sFilm = filmStorage.saveFilm(film);
         return sFilm;
     }
 
     public Film updateFilm(Film film) {
-        final Film uFilm = filmStorage.getFilmById(film.getId());
-        if (uFilm == null) {
-            throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
-        }
-        genreStorage.saveFilmGenres(film);
-        return filmStorage.updateFilm(film);
+        Film uFilm = getFilmWithCheckNull(film.getId());
+        uFilm = filmStorage.updateFilm(film);
+        return uFilm;
     }
 
     public void addLike(int filmId, int userId) {
+
+        final Film film = getFilmWithCheckNull(filmId);
         final User user = userStorage.getUserById(userId);
-        final Film film = filmStorage.getFilmById(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
-        }
         if (user == null) {
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
@@ -86,27 +64,26 @@ public class FilmService {
     }
 
     public void deleteLike(int filmId, int userId) {
+
         final User user = userStorage.getUserById(userId);
-        final Film film = filmStorage.getFilmById(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
-        }
         if (user == null) {
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
+        final Film film = getFilmWithCheckNull(filmId);
         likeStorage.deleteLike(filmId, userId);
-
     }
 
     public Collection<Film> getMostLikedFilms(int count) {
         Collection<Film> films = likeStorage.getMostLikedFilms(count);
-        for(Film film : films) {
-            LinkedHashSet<Genre> genres = genreStorage.loadFilmGenres(film.getId());
-            if (genres != null && !genres.isEmpty()) {
-                film.setGenres(genres);
-            }
-        }
         return films;
+    }
+
+    private Film getFilmWithCheckNull (int filmId) {
+        Film resFilm = filmStorage.getFilmById(filmId);
+        if (resFilm == null) {
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+        return resFilm;
     }
 }
 

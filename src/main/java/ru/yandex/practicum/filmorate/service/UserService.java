@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -24,10 +25,7 @@ public class UserService {
     }
 
     public User getUserById(int userId) {
-        final User resUser = userStorage.getUserById(userId);
-        if (resUser == null) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
+        final User resUser = getUserWithCheckNull(userId);
         return resUser;
     }
 
@@ -39,20 +37,15 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        final User tmpUser = userStorage.getUserById(user.getId());
-        if (tmpUser == null) {
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
+        final User uUser = getUserWithCheckNull(user.getId());
         return userStorage.updateUser(user);
     }
 
 
     public void addFriend(int userId, int friendId) {
-        final User user = userStorage.getUserById(userId);
+
+        final User user = getUserWithCheckNull(userId);
         final User friend = userStorage.getUserById(friendId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
         if (friend == null) {
             throw new NotFoundException("Друг с id = " + friendId + " не найден");
         }
@@ -60,11 +53,8 @@ public class UserService {
     }
 
     public void deleteFriend(int userId, int friendId) {
-        final User user = userStorage.getUserById(userId);
+        final User user = getUserWithCheckNull(userId);
         final User friend = userStorage.getUserById(friendId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
         if (friend == null) {
             throw new NotFoundException("Друг с id = " + friendId + " не найден");
         }
@@ -73,22 +63,23 @@ public class UserService {
     }
 
     public Collection<User> getFriends(int userId) {
-        final User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
+        final User user = getUserWithCheckNull(userId);
         return friendStorage.getFriends(userId);
     }
+
     public Collection<User> getCommonFriends(int userId, int otherUserId) {
-        final User user = userStorage.getUserById(userId);
-        final User otherUser = userStorage.getUserById(otherUserId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
-        if (otherUser == null) {
-            throw new NotFoundException("Пользователь с id = " + otherUserId + " не найден");
-        }
+
+        final User user = getUserWithCheckNull(userId);
+        final User otherUser = getUserWithCheckNull(otherUserId);
         return friendStorage.getCommonFriends(userId, otherUserId);
+    }
+
+    private User getUserWithCheckNull (int userId) {
+        final User resUser = userStorage.getUserById(userId);
+        if (resUser == null) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        return resUser;
     }
 
 }

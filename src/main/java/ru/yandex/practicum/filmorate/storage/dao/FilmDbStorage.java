@@ -5,19 +5,25 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    private GenreStorage genreStorage;
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, GenreStorage genreStorage) {
+
         this.jdbcTemplate = jdbcTemplate;
+        this.genreStorage = genreStorage;
     }
 
     @Override
@@ -32,7 +38,12 @@ public class FilmDbStorage implements FilmStorage {
         if (films.size() != 1) {
             return null;
         }
-        return films.get(0);
+        Film resFilm = films.get(0);
+        LinkedHashSet<Genre> genres = genreStorage.loadFilmGenres(filmId);
+        if (genres != null && !genres.isEmpty()) {
+            resFilm.setGenres(genres);
+        }
+        return resFilm;
     }
 
     @Override
@@ -43,6 +54,12 @@ public class FilmDbStorage implements FilmStorage {
                             "FROM FILMS f " +
                             "JOIN MPA m ON (m.MPA_ID = f.MPA_ID)";
         List<Film> films = jdbcTemplate.query(sqlQuery, FilmDbStorage::makeFilm);
+        for(Film film : films) {
+            LinkedHashSet<Genre> genres = genreStorage.loadFilmGenres(film.getId());
+            if (genres != null && !genres.isEmpty()) {
+                film.setGenres(genres);
+            }
+        }
         return films;
     }
 
@@ -66,6 +83,10 @@ public class FilmDbStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
         film.setId(keyHolder.getKey().intValue());
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            genreStorage.saveFilmGenres(film);
+        }
         return film;
     }
 
@@ -85,6 +106,7 @@ public class FilmDbStorage implements FilmStorage {
                 , film.getReleaseDate()
                 , film.getMpa().getId()
                 , film.getId());
+        genreStorage.saveFilmGenres(film);
         return film;
     }
 
